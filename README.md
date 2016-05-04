@@ -18,7 +18,7 @@ IDEA
  Folder Struction
 =====================
   * abstracts - Contains abstract classes for JqueryPhp
-  * methods - Methods
+  * methods - Methods (70+)
   
 Supported  Methods
 =====================
@@ -82,7 +82,35 @@ Supported  Methods
   * val
   * width
   * wrap
-  * 
+  * last
+  * first
+  * eq
+  * filter
+  * index
+  * slice
  
 Window
 =====================
+JqueryPHP Window is a class that mimicks standard browser window. It comes with methods needed to load,reload document and work with Events in it's natural way. 
+It currently supports 3 document protocols which is provided to "Load" method e.g http,file,blobdata.
+
+ Event
+=====================
+Implement window Event feature. 
+Currently, [click,load] event is implemented fully as we work towareds coming up with best possible for mouseover,mousedown,mouseout,keydown,keypress,keyup events. 
+
+
+ FEATURES
+=====================
+* Optimized for speed
+* Implements events and custom event binding
+* Load document from http url,local file or string
+* Using $this to access current element
+* New extension by simply extending the [jqueryphp_abstracts_element] class
+* Almost all jquery methods is implemented
+* Chaining is supported
+* You can now invoke query directly on a element i.e $j('body.class')
+* Deep document hierachy selector support i.e $j('html head > link')
+* Implemented :visible and :hidden Jquery selector
+* Elements are represented in JqueryPHP object that is readily accessible
+* JqueryPHP implements __toString method in both Document and Element
