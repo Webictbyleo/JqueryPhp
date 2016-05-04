@@ -36,12 +36,9 @@ not be touched
 		 foreach ($funcs as $func) {
                     spl_autoload_register($func);
                 }
-				
 		}
 			
 		}
-		
-		
 		
 		public static function load(&$document,$tag){
 			
@@ -54,21 +51,13 @@ not be touched
 						case 'int':
 						case 'float':
 							//Traversible check
-								
+								if(strip_tags($document) !==$document){
 									$doc = new jqueryphp_abstracts_document($document,$tag);
-								
+								}
 						break;
 						case 'array':
 						break;
 						case 'object':
-						//Normalize Jqm objects
-				
-					if(is_a($document,jqmdoc)){
-						$document = $document->__documentRaw;
-					}elseif(is_a($document,jqmel)){
-						$document = $document->dom()->get()->lastdom;
-					}
-					$doc = new jqueryphp_abstracts_document($document,$tag);
 						break;
 						
 					}
@@ -80,73 +69,20 @@ not be touched
 			
 			
 		}
-		public function window($request,$requestType='file',$onloadCallback,$data){
-			$w = new jqueryphp_abstracts_window;
-				if(isset($request)){
-						if(isset($onloadCallback)){
-							
-							$w->onload($onloadCallback,$data);
-						}
-					$w->load($request,$requestType);
-				}
-			return $w;
-		}
+		
 		public function extend(){
 			
 			
 		}
-		
-		protected function document_ready_run($query){
+		//Depreciated
+		public function document_ready_run(){
 			
 			
 		}
-		
-		public static function ready($callback){
+		//Depreciated
+		public static function ready(){
 			
-			if(is_callable($callback) || function_exists($callback)){
-					$loaded = WebBaker::_getResponse();
-					$id = time().uniqid();
-					
-					JqueryBoxManager::$readyCallbacks[$id] = $callback;
-					
-						if(!is_object($loaded)){
-							//Not loaded
-							return ;
-						}
-						
-						
-						
-						if(array_key_exists('hooks::content_is_found',Registry::getInstance()->LOADED_EVENT_HOOKS)){
-							
-							$doc = $loaded->theme->getContent();
-							if($doc ===NULL || empty($doc))return;
-							if(preg_match('/<([a-z0-9\-]+)(.*?)>(.*?)(<\/\1>)/is',$doc,$match)){
-								if(!isset(JqueryBoxManager::$DOM) || !is_a(JqueryBoxManager::$DOM,jqmdoc)){
-							JqueryBoxManager::$DOM = jqm($doc,'*');
-							
-								}
-								
-								$dom = JqueryBoxManager::$DOM;
-								//Make sure this is a valid jqueryphpmanager object
-								if(is_a($dom,jqmdoc)){
-									if(isset(JqueryBoxManager::$readyCallbacks) AND is_array(JqueryBoxManager::$readyCallbacks)){
-										$c = count(JqueryBoxManager::$readyCallbacks);
-										$keys = array_keys(JqueryBoxManager::$readyCallbacks);
-										
-										for($i=0;$c > $i;$i++){
-											
-											if(empty(JqueryBoxManager::$readyCallbacks[$keys[$i]]))continue;
-											call_user_func(JqueryBoxManager::$readyCallbacks[$keys[$i]],$dom);
-											unset(JqueryBoxManager::$readyCallbacks[$keys[$i]]);
-											
-										}
-										
-									}
-								}
-							}
-						}
-				
-			}
+			
 		}
 		public function setVar($name,$var){
 				if(is_scalar($name)){
@@ -158,8 +94,8 @@ not be touched
 		public function getVar($var){
 			$name = $var;
 			$var = JqueryBoxManager::$__collectionList[$var];
-			//unset(JqueryBoxManager::$__collectionList[$name]);
-			//unset($name);
+			unset(JqueryBoxManager::$__collectionList[$name]);
+			unset($name);
 			return $var;
 		}
 		//An obselete function for the jquery::ready callback
@@ -168,14 +104,14 @@ not be touched
 		}
 		
 		public static function loadClass($class){
-					if(stripos($class,'jqueryphp') !==false){
+					if(stripos($class,'jqueryphp') !==0)return false;
 				$main = dirname(__DIR__);
 			$cl = explode(DELIMITER_UNDER,$class);
 				$realFile = implode(DELIMITER_DIR,$cl);
+					
 				if(file_exists($main.DIRECTORY_SEPARATOR.$realFile.'.php')){
 					require($main.DIRECTORY_SEPARATOR.$realFile.'.php');
 				}
-					}
 		}
 		
 		public function setNamespace($name){
