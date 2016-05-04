@@ -114,3 +114,33 @@ Currently, [click,load] event is implemented fully as we work towareds coming up
 * Implemented :visible and :hidden Jquery selector
 * Elements are represented in JqueryPHP object that is readily accessible
 * JqueryPHP implements __toString method in both Document and Element
+* Supports multiple selectors per query i.e $j('body,div,p')
+* Fixes broken document
+* Optonally load document from Window
+* Supports Window.onload asported to Window->onload
+
+ HOW TO USE
+=====================
+require("PATH_TO_LIBRARY/init.php");
+$j = jqm($html);
+//Search html
+$j("a[href]").each(function(){
+ if($this->is(":disabled")->get() ==true){
+ $this->remove();
+ }
+})
+$scripts = $j->search("body script:empty");
+if($scripts->length > 0){
+$this.appendTo("body head")
+}
+$win = jqm_window();
+$win->onload(function($e){
+//Do things
+})
+$win->load($PATH_TO_LOCAL_FILE,'file');
+ or
+$win->load($URL_TO_HTTP_FILE,'http');
+ or
+$win->load($HTML_STRING,'blobdata')
+
+
