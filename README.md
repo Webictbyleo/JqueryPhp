@@ -83,5 +83,6 @@ Supported  Methods
   * width
   * wrap
   * 
- Window
+ 
+Window
 =====================
