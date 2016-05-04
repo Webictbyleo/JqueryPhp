@@ -147,4 +147,26 @@ Currently, [click,load] event is implemented fully as we work towareds coming up
  
   $win->load($HTML_STRING,'blobdata')
 
+USES
+=========
+Endless!
+Though I developed it for a custom PHP project for presentation/templating purposes.
+ * Web Scraper
+ * Website Screenshot
+ * Window Class is readily available to be implemented with a Browser class
+ * ......the need is endless
+ * 
+
+Credits
+=========
+Simpon Sapin -  CSSselector
+Symphony Framework
+Jquery javascript library
+
+
+Author
+=========
+Leo.I.Anthony
+(http://about.me/webictbyleo)
+(http://corperweb.com)(https://www.facebook.com/app_scoped_user_id/10203562122568594/)
 
