@@ -121,26 +121,30 @@ Currently, [click,load] event is implemented fully as we work towareds coming up
 
  HOW TO USE
 =====================
-require("PATH_TO_LIBRARY/init.php");
-$j = jqm($html);
-//Search html
-$j("a[href]").each(function(){
- if($this->is(":disabled")->get() ==true){
- $this->remove();
- }
-})
-$scripts = $j->search("body script:empty");
-if($scripts->length > 0){
-$this.appendTo("body head")
-}
-$win = jqm_window();
-$win->onload(function($e){
-//Do things
-})
-$win->load($PATH_TO_LOCAL_FILE,'file');
+  require("PATH_TO_LIBRARY/init.php");
+  $j = jqm($html);
+  //Search html
+  $j("a[href]").each(function(){
+   if($this->is(":disabled")->get() ==true){
+   $this->remove();
+   }
+  })
+  $scripts = $j->search("body script:empty");
+  if($scripts->length > 0){
+  $this.appendTo("body head")
+  }
+  $win = jqm_window();
+  $win->onload(function($e){
+  //Do things
+  })
+  $win->load($PATH_TO_LOCAL_FILE,'file');
+
  or
-$win->load($URL_TO_HTTP_FILE,'http');
+ 
+  $win->load($URL_TO_HTTP_FILE,'http');
+
  or
-$win->load($HTML_STRING,'blobdata')
+ 
+  $win->load($HTML_STRING,'blobdata')
 
 
