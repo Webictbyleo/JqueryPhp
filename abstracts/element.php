@@ -129,7 +129,7 @@ defined('SAFE')or die();
 						if($doc->doctype){
 					$doc->removeChild($doc->doctype);
 						}
-					$doc->preserveWhiteSpace = false;
+					//$doc->preserveWhiteSpace = false;
 					
 					$path = new DomXpath($doc);
 						$get = $path->query($node->_path);
@@ -377,7 +377,7 @@ defined('SAFE')or die();
 				$docm = jqm_use($node->_parentElement);
 				//$docm->__documentRaw = preg_replace('/\s+/',' ',$docm->__documentRaw);
 				$doc = $docm->_DOM;
-				
+			
 					if($doc->doctype){
 				$doc->removeChild($doc->doctype);
 					}	$k = key($this->_domId);
@@ -402,23 +402,25 @@ defined('SAFE')or die();
 					
 				$newdoc = new domDocument;
 				$dom = $node->dom()->get();
-				$newdoc->loadhtml($dom->lastdom);
+				$newdoc->loadhtml(mb_convert_encoding($dom->lastdom, 'HTML-ENTITIES', 'UTF-8'));
 				$newdoc->removeChild($newdoc->doctype);
-				$newdoc->normalize();
+				
 				
 				$newdoc_get = $newdoc->getElementsByTagName($node->_name);
 			
 				//Finder
 				$xpath = new DomXpath($doc);
 				$find = $xpath->query($node->_path);
-				
+					
 				
 					
 				if($find->length > 0){
 					$frag = $doc->importNode($newdoc_get->item(0),true);
 					
 							if($find->item(0)->parentNode){
+								
 					$find->item(0)->parentNode->replaceChild($frag,$find->item(0));
+					
 							}
 						
 					/* $output = $doc->saveHTML();
@@ -487,6 +489,7 @@ defined('SAFE')or die();
 						}
 						
 					if($find AND is_a($find,'DomElement')){
+						
 						$this->replaceWith($doc->saveHTML($find));
 						
 						$this->get_selector();

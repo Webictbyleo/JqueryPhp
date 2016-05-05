@@ -39,15 +39,16 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 				
 			$this->__documentMap = array();
 			$DOM = new DOMDocument;
-			$DOM->encoding = 'utf-8';
+			
 			$DOM->recover = true;
-			$DOM->preserveWhiteSpace = false;
+			$DOM->preserveWhiteSpace = true;
+			$DOM->substituteEntities = true;
 			$DOM->formatOutput = true;
-			$DOM->loadHTML($document,LIBXML_NOERROR | LIBXML_NOWARNING | LIBXML_COMPACT);
+			$DOM->encoding = 'utf-8';
+			$DOM->loadHTML(mb_convert_encoding($document, 'HTML-ENTITIES', 'UTF-8'));
 			
+			$DOM->normalizeDocument();
 			
-			
-			//$DOM->normalizeDocument();
 			$html = $DOM->getElementsByTagName($tagname);
 			//Determine root / pieced map
 			$hasRoot = false;
@@ -106,6 +107,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 		public function __toString(){
 			
 			if(isset($this->_DOM)){
+				
 				$html = func_get_arg(0);
 				$this->rewind();
 				//Get the namespace in use
