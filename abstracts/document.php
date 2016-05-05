@@ -20,6 +20,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 			'root'=>false,
 			'rootPath'=>NULL,
 			'rootIndex'=>NULL,
+			'doctype'=>'<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">'
 			);
 			private $_namespace;
 		public function __construct($document,$tagname='*'){
@@ -31,7 +32,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 				}
 				$this->_namespace = microtime(true).uniqid();
 				jqm_var($this->_namespace,$this);
-			$document = preg_replace('/\s+/',' ',$document);
+			//$document = preg_replace('/\s+/',' ',$document);
 			
 			//Detect if $document is a valid full document
 			$hasHTML = (stripos($document,'<html') !==false);
@@ -40,15 +41,17 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 			$DOM = new DOMDocument;
 			$DOM->encoding = 'utf-8';
 			$DOM->recover = true;
-			$DOM->preserveWhiteSpace = true;
+			$DOM->preserveWhiteSpace = false;
 			$DOM->formatOutput = true;
-			$DOM->substituteEntities = true;
-			$DOM->normalizeDocument();
+			$DOM->loadHTML($document,LIBXML_NOERROR | LIBXML_NOWARNING | LIBXML_COMPACT);
 			
-			$DOM->loadHTML($document);
+			
+			
+			//$DOM->normalizeDocument();
 			$html = $DOM->getElementsByTagName($tagname);
 			//Determine root / pieced map
 			$hasRoot = false;
+			
 			if($html->item(0)->childNodes->length > 0){
 				
 				$hasRoot = false;
@@ -77,6 +80,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 			$this->_length = false;
 			$this->length = false;
 				if($DOM->doctype){
+					//$this->__schema['doctype'] = $DOM->saveHTML($DOM->doctype);
 			$DOM->removeChild($DOM->doctype);
 				}
 			
@@ -131,11 +135,13 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 				} */
 				
 				$hasHTML = ($html !==true);
-				$this->__documentRaw = $this->_DOM->saveHTML();
+				
+				$this->__documentRaw = $this->_DOM->savehtml();
 				
 			if($hasHTML){
 				//Return just a partial html
 				$this->__documentRaw = str_ireplace(array('<html>','<body>','</html>','</body>','<head>','</head>'),'',$this->__documentRaw);
+				
 			}
 				
 				$this->__mapLength = 0;
@@ -167,16 +173,17 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 		
 				$ismulti = false;
 					
+				$totals[$query_arg['selectors']] = count($all[1]);
 				
 					if(isset($this->_multiselector) AND is_array($this->_multiselector)){
-						$query_args = array($query_arg['pattern'] => $query_arg);
+						$query_args = array($query_arg['selectors'] => $query_arg);
 						$matches = $all;
 						if(empty($matches)){
 						$matches = array_fill(0,7,array());
 						
 							}
 						
-						$totals[$query_arg['pattern']] = count($matches[1]);
+						
 						$matches[5] = array_fill(0,$totals[$query_arg['pattern']],$query_arg['pattern']);
 								if($matches[5] ===false || empty($matches[5])){
 									$matches[5] = array();
@@ -184,7 +191,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 							foreach($this->_multiselector as $pattern){
 								$arg =  $this->match_selector($pattern);
 								
-								$query_args[$arg['pattern']] = $arg;
+								$query_args[$arg['selectors']] = $arg;
 								$ar = $this->perform_query($arg);
 								
 								array_shift($this->_multiselector);
@@ -195,7 +202,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 								$matches[3] = array_merge($matches[3],$ar[3]);
 								$matches[4] = array_merge($matches[4],$ar[4]);
 								$matches[6] = array_merge($matches[6],$ar[6]);
-								$totals[$arg['pattern']] = count($ar[1]);
+								$totals[$arg['selectors']] = count($ar[1]);
 								$fills = array_fill(0,$totals[$arg['pattern']],$arg['pattern']);
 								$matches[5] = array_merge($matches[5],$fills);
 								
@@ -206,6 +213,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 							
 						$ismulti = true;$all = $matches;
 						unset($matches);
+						
 					}
 					
 					$this->removeMatchDuplicates($all);
@@ -214,13 +222,15 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 					
 						
 				$total = count($all[1]);
-			$stops = array();
+			$stops = $stop2 = array();
 			for($i=0;$total > $i;$i++){
+				
 			$m = array($all[0][$i],$all[1][$i],$all[2][$i],$all[3][$i],$all[4][$i]);
 			$paths = explode('|',$all[6][$i]);
-					if($ismulti AND isset($query_args) AND is_array($query_args)){
+					if($ismulti AND isset($query_args) AND is_array($query_args) AND isset($query_args[$all[5][$i]])){
 					$query_arg = $query_args[$all[5][$i]];
 					}
+				--$totals[$query_arg['selectors']];
 				if(empty($m))continue;
 				 	 if(array_key_exists('first',$query_arg['filters'])){
 					
@@ -231,18 +241,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 				}
 				
 				
-				 	if(array_key_exists('last',$query_arg['filters'])){
-						$t = $total;
-						if($ismulti AND isset($totals)){
-							$t = $totals[$query_arg['pattern']];
-						}
-						
-						if($i ==($total-1) AND $count > 0){
-							$eles = array(end($eles));
-							$count = 1;
-						break;
-						}
-					} 
+				 	 
 					
 					
 				
@@ -352,7 +351,21 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 					 if(array_key_exists('first',$query_arg['filters'])){
 					
 								$stops[] = $query_arg['selectors'];
-						
+						}
+						if(array_key_exists('last',$query_arg['filters'])){
+								
+							if($totals[$query_arg['selectors']]===0){
+								$stop2[] = $query_arg['selectors'];
+								
+							}
+							
+					}
+					if(array_key_exists('last',$query_arg['filters'])){
+					 if(!empty($stop2) AND in_array($query_arg['selectors'],$stop2)){
+							
+							}else{
+								continue;
+							}
 				}
 				$ele = $this->toElement($m);
 				$ele->_selector = $this->_selector.' '.$query_arg['selectors'];
