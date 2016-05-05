@@ -121,8 +121,13 @@ defined('SAFE')or die();
 		
 		public function onload($callback,$data=NULL){
 			$callable = (is_callable($callback) || function_exists($callback));
+			
 				if($callable){
-			$this->Event->onload['window.load'] = array($callback,$data);
+					if(isset($this->Event->onload['window.load'])){
+						
+					}else{
+			$this->Event->onload['window.load'.uniqid()] = array($callback,$data);
+					}
 				}
 		}
 	}
