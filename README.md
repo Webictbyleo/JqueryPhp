@@ -71,6 +71,7 @@ Supported  Methods
   * replaceAll
   * replaceWith
   * serializeArray
+  * serialize
   * show
   * siblings
   * tag
@@ -82,6 +83,7 @@ Supported  Methods
   * val
   * width
   * wrap
+  * wrapinner
   * last
   * first
   * eq
