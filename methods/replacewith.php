@@ -12,118 +12,60 @@ class jqueryphp_methods_replaceWith extends jqueryphp_abstracts_element{
 		
 		public function run($html=NULL){
 				if(!is_null($html)){
-				$new = $this->createFragment($html);
-				
-			if(is_a($new,jqmel)){
-				
-					
-					$this->oldnode = clone($this->node);
-					
-					$document = jqm_use($this->node->_parentElement);
-					
-					$np = $this->node->next()->get();
-					$npp = $this->node->prev()->get();
-					
-					$this->node->_selector = $new->_selector;
-					$this->node->_token = $new->_token;
-					$this->node->_nodeLevel = $new->_nodeLevel;
-					
-					$this->node->selector = $new->selector;
-					$this->node->_name= $new->_name;
-					$this->node->_content= $new->_content;
-					$this->node->_attrMap= $new->_attrMap;
-					$this->node->_innerHtml= $new->_innerHtml;
-					$this->node->_innerText= $new->_innerText;
-					
-					$this->node->_localName= $new->_localName;
-					$this->node->_attributes = $new->_attributes;
-					
-					$save = $this->node->saveHtml();
-					$k = key($this->node->_domId);
-					$this->node->_domId[$k] = end($new->_domId);
-					
-					$paths = explode('/',$this->node->_path);
-					$sh = array_pop($paths);
-					$paths[] = $new->_name;
-					
-					$this->node->_path = $save;
-					//$save = $this->node->saveHtml();
-					
-					$par = $this->node->parent();
-					
-						if(is_a($par,jqmel)){
-							
-							$this->node->_parent_path = $par->get()->_path;
-							
-								if(is_a($npar,jqmel)){
-									$npar->node = $par->get();
+					if(is_a($html,'DOMNode')){
+						$np = 'HTML';if($this->node->isXml())$np = 'XML';
+						$html = $html->ownerDocument->{'save'.$np}($html);
+						if(!is_scalar($html))return;
+					}elseif(is_a($html,jqmel)){
+						$html = $html->toString();
+						if(!is_scalar($html))return;
+					}elseif(is_callable($html)){
+						if(is_a($html,Closure)){
+							$callback = Closure::bind($html,$this->node);
 								}
-						}
-						
-					//Reconcle paths
-						$rec = $document->_DOM;
-						if($rec->doctype){
-						$rec->removeChild($rec->doctype);
-						}
-						$xpath = new DomXpath($rec);
-						$find = $xpath->query($save);
-							if($find->length > 0){
-								
-								$wrap = $rec->saveHtml($find->item(0)->parentNode);
-						$wrap = substr($wrap,strpos($wrap,'>')+1);
-						if(!empty($par->get()->_localName)){
-							$wrap = substr($wrap,0,strripos($wrap,$par->get()->_localName));
+							$html = call_user_func($callback,$this->node->_token);
 							
-							$par->get()->html($wrap);
-							$par->get()->saveHtml();
-							
-						}
-								$this->node->_path = $find->item(0)->getNodePath();
-								
-								if(is_a($np,jqmel)){
-									if($find->item(0)->nextSibling){
-						$this->node->_next_path = $find->item(0)->nextSibling->getNodePath();
-									}else{
-						$this->node->_next_path = NULL;
-							}
-							
-						$np->_path = $this->node->_next_path;
-						$np->_prev_path = $this->node->_path;
-						$npd = $np->__toDomElement();
-							if($npd->nextSibling){
-								$np->_next_path = $npd->nextSibling->getNodePath();
-							}else{
-								$np->_next_path = NULL;
-							}
-							unset($npd);
+							if(!is_scalar($html))return;
 					}
-					if($find->item(0)->previousSibling AND is_a($npp,jqmel)){
-						
-						$this->node->_prev_path = $find->item(0)->previousSibling->getNodePath();
-						
-					}else{
-						$this->node->_prev_path = NULL;
-					}
-					$npp->_path = $this->node->_prev_path;
-						$npp->_next_path = $this->node->_path;
-						$npd = $npp->__toDomElement();
-							if($npd->previousSibling){
-								$npp->_prev_path = $npd->previousSibling->getNodePath();
-							}else{
-								$npp->_prev_path = NULL;
-							}
-							unset($npd);
-							}
 					
-							
-							
-							
-							
-							
-					unset($new);
-			}
+					$html = preg_replace('/\s+/',' ',$html);
+					$regex = '/<([a-z0-9\-]+)(.*?)>(?:(.*?)(<\/\1>))?/xsi';
+				if(preg_match($regex,$html,$match)){
+					$match[2] = rtrim($match[2],'/');
 				}
-			
+				
+					if(empty($match[1]))return;
+					$np = 'html';
+					$dc=new domdocument;
+					$dc->preserveWhiteSpace = false;
+					if($this->node->isxml())$np = 'xml';
+					$dc->{'load'.$np}($html);
+					$x = new DomXpath($dc);
+					$new = $x->query('/html/body/'.$match[1])->item(0);
+					//$new = $new->firstChild;
+					
+					$frag = $this->__toDomElement()->ownerDocument->importNode($new,true);
+					$this->__toDomElement()->parentNode->replaceChild($frag,$this->__toDomElement());
+					
+					
+					$node = $this->node->exportNode($frag);
+					
+					$this->node->_attributes = $node->_attributes;
+					$this->node->_name = $node->_name;
+					$this->node->_attrMap = $node->_attrMap;
+					$this->node->_nodeLevel = $node->_nodeLevel;
+					$this->node->_innerHtml = $node->_innerHtml;
+					$this->node->_innerText = $node->_innerText;
+					$this->node->_childElement = $node->_childElement;
+					$this->node->_selector = $node->_selector;
+					$this->node->_localName = $node->_localName;
+					$this->node->_path = $node->_path;
+					$this->node->selector = $node->selector;
+					$this->node->DOMel = $node->DOMel;
+					$this->node->_content = $node->_content;
+					
+				}
+			return $this;
 		}
 		
 		
