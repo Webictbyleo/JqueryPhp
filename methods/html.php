@@ -12,12 +12,22 @@ class jqueryphp_methods_html extends jqueryphp_abstracts_element{
 		
 		public function run($new =Null){
 				//If its a document element
-			if(!is_null($new)){
+			if(!is_null($new) and is_scalar($new)){
 					if(is_a($new,jqmel)){
 						
 					}
-				$this->node->_innerHtml = $new;
-				$this->node->saveHtml();
+					$dom = $this->node->toString();
+			$se = preg_match('/<('.$this->node->_name.'*)\b(.*?)>/xsi',$dom,$r);
+			
+			if($se){
+				if(isset($r[0])){
+					$new = $r[0].$new.'</'.$this->node->_name.'>';
+					
+					$this->node->replaceWith($new,func_get_arg(1));
+				}
+			}
+				
+				
 			}else{
 				return $this->node->_innerHtml;
 			}
