@@ -10,10 +10,11 @@ class jqueryphp_methods_parents extends jqueryphp_abstracts_element{
 			$this->node  = $ele;
 		}
 		
-		public function run($query='*'){
-			$path = explode('/',$this->node->_path);
+		public function run($query='*',$d=false){
+			
 			
 			$el = $this->__toDomElement();
+			$path = explode('/',$el->getNodePath());
 			$document = jqm_use($this->node->_parentElement);
 			
 					
@@ -22,53 +23,28 @@ class jqueryphp_methods_parents extends jqueryphp_abstracts_element{
 					if($query ===NULL || $query =='*'){
 						$query = $el->parentNode->tagName;
 					}
-						$t = count($path);
-					
-			
+						
 			$doc = $document->_DOM;
 					
 						if($doc->doctype){
 					$doc->removeChild($doc->doctype);
 						}
+						$selector = $document->match_selector($query,$el->getNodePath().'/ancestor::');
 						
-						$xpath = new DomXpath($doc);
+						$xpath = $document->xpath($doc);
+						$find = $xpath->query($selector['xpath']);
+							if($d===true){
 						
-						for($i=0; $t > $i;){
-							array_pop($path);
-							++$i;
-							if(empty($path))continue;
-							$find = $xpath->query(implode('/',$path));
-							if($find->length > 0){
-								$el = $this->createFragment($doc->saveHtml($find->item(0)),false);
-								$k = key($el->_domId);
-								
-								$is = $el->is($query);
-								
-								if($is->get()===true){
-									$el->_path = $find->item(0)->getNodepath();
-									if($find->item(0)->nextSibling){
-										$el->_next_path = $find->item(0)->nextSibling->getNodepath();
-									}else{
-										$el->_next_path = NULL;
-									}
-									if($find->item(0)->previousSibling){
-										$el->_prev_path = $find->item(0)->previousSibling->getNodepath();
-									}else{
-										$el->_prev_path = NULL;
-									}
-									if($find->item(0)->parentNode){
-										$el->_parent_path = $find->item(0)->parentNode->getNodepath();
-									}else{
-										$el->_parent_path = NULL;
-									}
-									$el->selector = $document->match_selector($query);
-									$this->node = $el;
-									$this->node->setDomID($el->_parentElement.$el->_token);
-									return $this;
-									break;
-								}
-							}
+					}else{
+						
+					}
+						if($find->length){
+							$this->node = $this->exportNode($find->item(0),$selector);
+							
+							return $this->node;
 						}
+						
+							
 					
 				$this->node= new jqueryphp_abstracts_prevObject($this->node->_selector.':parent(*)');
 				return $this;

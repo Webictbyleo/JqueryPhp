@@ -7,13 +7,13 @@ class jqueryphp_methods_clone extends jqueryphp_abstracts_element{
 			$this->node  = $ele;
 		}
 		
-		public function run(){
-				$new = $this->createFragment($this->node->dom()->get()->lastdom,false);
-				if(is_a($new,jqmel)){
-					$this->node = $new;
-					
-				}
+		public function run($deep=true){
+			$el = ($this->node->__toDomElement());
+			$this->node = clone($this->node);
 			
+			$new = ($el->cloneNode($deep));
+			$this->node->setDom($new);
+			return $this->node;
 		}
 		
 		public function get(){

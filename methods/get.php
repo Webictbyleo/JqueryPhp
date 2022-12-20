@@ -11,13 +11,14 @@ class jqueryphp_methods_get extends jqueryphp_abstracts_element{
 		}
 		
 		public function run(){
-			return $this->node->_content;
+			
+			return $this->node->DOMel;
 			
 		}
 		
 		public function get(){
 			
-			return $this->node->_content;
+			return $this->node->DOMel;
 		}
 		
 		

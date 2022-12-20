@@ -9,7 +9,7 @@ class jqueryphp_methods_hide extends jqueryphp_abstracts_element{
 		public function run(){
 			$this->node->css('display','none');
 			$this->node->css('opacity','0');
-			$this->savehtml();
+			//$this->savehtml();
 		}
 		
 		public function get(){

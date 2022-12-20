@@ -15,42 +15,33 @@ class jqueryphp_methods_nextUntil extends jqueryphp_abstracts_element{
 			$dom = $this->node->__toDomElement();
 			
 			 $ns = jqm_use($this->node->_parentElement);
-			
-			$done = true;
+			$sc = $ns->match_selector($selector);
 			$node = $dom;
-				while($done!=false){
-						if($node->nextSibling){
-							$node = $node->nextSibling;
-								if($node->nodeType !== 1)continue;
-								if(is_a($selector,'DomElement') AND $node->isSameNode($selector)){$done = false;break;}
-									
-							$el = $this->createFragment($dom->ownerDocument->saveHtml($node),false);
-							$el->_path = $node->getNodepath();
-							if(is_a($selector,jqmel) AND $selector->_path===$el->_path){
-								$done = false;
-										break;
-									}
-							
-							$el->_parentElement = $this->node->_parentElement;
-							$el->_parent_path = $this->node->_parent_path;
-							$el->_prev_path = $this->node->_prev_path;
-							$el->_next_path = $this->node->_next_path;
-							$el->setDomID($this->node->_parentElement.$this->node->_token);
-							$el->selector = $ns->match_selector($node->tagName.'[data-dom-id="'.key($el->_domId).'"]',$el->_path.'::',false);
-							if(!empty($selector)){
-							$is = $el->is($selector)->get();
-								if($is ===true){
-									$done = false;
-									break;
-								}
+			
+			$x = $ns->xpath($dom->ownerDocument);
+			
+				$find = $x->query($dom->getNodePath().'/following-sibling::node()');
+				
+				if($find->length){
+						$iterator = range(0,$find->length-1);
+					$node = $this->node;
+				$nodes = array_map(function($i)use($find,$node,$selector,$dom){
+					if(isset($dom->indexStop))return NULL;
+						$item = $find->item($i);
+						$ele = $node->exportNode($item);
+							if($ele->is($selector)->get()){
+								$dom->indexStop = $i;
+								return NULL;
 							}
-							$nodes[] = $el;
-							
-						}else{
-							$done = false;
-							break;
-						}
+						return $ele;
+					},$iterator);
+				if(is_array($nodes)){
+					
+					$nodes = array_values(array_filter($nodes));
 				}
+					}
+			
+				
 					if(!isset($nodes) || empty($nodes)){
 						return $this->node = new jqueryphp_abstracts_prevObject;
 					}

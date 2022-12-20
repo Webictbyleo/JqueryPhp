@@ -12,37 +12,29 @@ class jqueryphp_methods_remove extends jqueryphp_abstracts_element{
 		
 		public function run(){
 			
-			$document = jqm_use($this->node->_parentElement);
-			
-			$doc = $document->_DOM;
-						if($doc->doctype){
-					$doc->removeChild($doc->doctype);
-						}
-			
-			
-			
-				$pt = $this->node->getPathByID();
+				$dom = $this->node->__toDomElement();	
+						if($dom){
 				
-						if($pt){
-				$path = new DomXpath($doc);
-						$get = $path->query($pt);
-						
-							if($get->length > 0){
-								
-								$this->node->_attributes = array();
+					if($dom->parentNode){
+					$dom->parentNode->removeChild($dom);
+					}else{
+						//$dom->ownerDocument->removeChild($dom);
+					}
+			
+			$this->node->_attributes = array();
 			$this->node->_innerHtml = NULL;
+			$this->node->_attrMap = NULL;
+			$this->node->_innerText = NULL;
+			$this->node->DOMel = NULL;
+			$this->node->style = NULL;
 			$this->node->_name = NULL;
 			$this->node->_localName = NULL;
 			$this->node->_length = false;
+			$this->node->_content = null;
 						
-						$save = $get->item(0)->parentNode->removeChild($get->item(0));
-						
-					$document->offsetUnset($this->node->_token);
+					
 							
-							}
-						}else{
-							$document->offsetUnset($this->node->_token);
-							$this->node->_length = false;
+							
 						}
 						
 					
@@ -50,7 +42,7 @@ class jqueryphp_methods_remove extends jqueryphp_abstracts_element{
 		
 		public function get(){
 			
-			return false;
+			return $this->node;
 		}
 		
 		

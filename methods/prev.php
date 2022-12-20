@@ -10,7 +10,7 @@ class jqueryphp_methods_prev extends jqueryphp_abstracts_element{
 			$this->node  = $ele;
 		}
 		
-		public function run(){
+		public function run($query=NULL){
 			
 			$dom = $this->__toDomElement();
 						if($dom->previousSibling){
@@ -19,38 +19,38 @@ class jqueryphp_methods_prev extends jqueryphp_abstracts_element{
 							$dom = $dom->previousSibling;
 							//Get the search param
 							if($dom->nodeType !==1){
+								
 									$dom = $dom->previousSibling;
 								}
-							$selector = $doc->match_selector($dom->tagName);
 							
+								if(!is_null($query) and !empty($query)){
+									
+									
+									$x = $doc->Xpath($doc->_DOM);
+									$selector = $doc->match_selector($query,$this->__toDomElement()->getNodePath().'/preceding-sibling::');
+									$find = $x->query($selector['xpath']);
+									
+										if($find->length){
+											$dom = $find->item(0);
+										}else{
+											$dom = NULL;
+										}
+								}
+
 								if(!$dom){
-									return $this->node =  new jqueryphp_abstracts_prevObject($selector['selectors']);
+									return $this->node =  new jqueryphp_abstracts_prevObject();
 								}
-							$path = $dom->getNodePath();
-								
-							//Find this ele in the Dom Node
-							$node = $this->findRelatedDom(array('_path'=>$path));
-								
-							$str = $dom->ownerDocument->savehtml($dom);
+							$path = $dom->getNodePath();	
 							
-							if(is_a($node,jqmel)){
 								
-								
-									$this->node = $node;
-									unset($node);
-									return;
-								}
-							$dom = $this->createFragment($str,false);
+							$dom = $this->node->exportNode($dom);
 							
 							if(is_a($dom,jqmel)){
-					
-				$dom->_path = $path;
-				$dom->selector = new jqueryphp_abstracts_selector($selector);
-				$dom->setDomID($dom->_parentElement.$dom->_token);
+				
 				return $this->node = $dom;
 							}else{
 								//notfound
-								return $this->node =  new jqueryphp_abstracts_prevObject($selector['selectors']);
+								return $this->node =  new jqueryphp_abstracts_prevObject();
 							}
 							
 						}else{

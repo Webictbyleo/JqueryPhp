@@ -15,27 +15,18 @@ class jqueryphp_methods_nextAll extends jqueryphp_abstracts_element{
 			$dom = $this->node->__toDomElement();
 			
 			 $ns = jqm_use($this->node->_parentElement);
-			
-			$done = true;
-			$node = $dom;
-				while($done!=false){
-						if($node->nextSibling){
-							$node = $node->nextSibling;
-								if($node->nodeType !== 1)continue;
-							$el = $this->createFragment($dom->ownerDocument->saveHtml($node),false);
-							$el->_path = $node->getNodepath();
-							$el->_parentElement = $this->node->_parentElement;
-							$el->_parent_path = $this->node->_parent_path;
-							$el->_prev_path = $this->node->_prev_path;
-							$el->_next_path = $this->node->_next_path;
-							$el->setDomID($this->node->_parentElement.$this->node->_token);
-							$el->selector = $ns->match_selector($node->tagName.'[data-dom-id="'.key($el->_domId).'"]',$el->_path.'::',false);
-							$nodes[] = $el;
-							
-						}else{
-							$done = false;
-							break;
-						}
+			 
+			$xpath = $ns->xpath($dom->ownerDocument);
+			$find = $xpath->query($dom->getNodePath().'/following-sibling::*');
+				if($find->length > 0){
+					$iterator = range(0,$find->length-1);
+					$node = $this->node;
+				$nodes = array_map(function($i)use($find,$node){
+						$item = $find->item($i);
+						$ele = $node->exportNode($item);
+						return $ele;
+					},$iterator);
+					
 				}
 					if(!isset($nodes) || empty($nodes)){
 						return $this->node = new jqueryphp_abstracts_prevObject;

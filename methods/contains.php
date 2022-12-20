@@ -11,16 +11,19 @@ class jqueryphp_methods_contains extends jqueryphp_abstracts_element{
 			$this->node  = $ele;
 		}
 		
-		public function run(jqueryphp_methods_dom $ele){
-			$frag = $this->createFragment($ele->lastdom,false);
+		public function run($ele){
 			
-				$this->node->refreshDom();
-				
-					$frag->_path = $ele->path;
-					$is = $frag->parents($this->node->_name)->get();
 					
-					if(is_a($is,jqmel)){
-						$this->done = ($is->_path === $this->node->_path);
+					if(is_a($ele,jqmel)){
+						$document = jqm_use($this->node->_parentElement);
+						$x = $document->Xpath($this->__toDomElement()->ownerDocument);
+						
+						$find = $x->query($ele->_path.'/ancestor::'.$this->node->_name.'[@data-dom-id = "'.key($this->node->_domId).'"][1]');
+						if(!$find->length){
+							$this->done = false;
+						}else{
+							$this->done = true;
+						}
 					}else{
 						$this->done = false;
 					}

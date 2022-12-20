@@ -29,9 +29,10 @@ class jqueryphp_methods_val extends jqueryphp_abstracts_element{
 						$save = $this->node->saveHtml(true);
 					}elseif($this->node->_name ==='textarea'){
 						
-						$this->node->_innerHtml = $value;
-						$this->node->_innerText = strip_tags($value);
-						$save = $this->node->saveHtml(true);
+						//$this->node->_innerHtml = $value;
+						//$this->node->_innerText = strip_tags($value);
+						$this->node->html($value);
+						//$save = $this->node->saveHtml(true);
 					}elseif($this->node->_name ==='select'){
 						$options = $this->node->children('option')->get();
 						
@@ -72,7 +73,7 @@ class jqueryphp_methods_val extends jqueryphp_abstracts_element{
 					}elseif($this->node->_name ==='textarea'){
 						return !empty($this->node->_innerHtml) ? $this->node->_innerHtml : NULL;
 					}elseif($this->node->_name ==='select'){
-						$options = $this->node->children('option[selected]:first:parant(select)')->get();
+						$options = $this->node->find('option[selected]:first:parent(select)')->get();
 						if($options->_length > 0){
 							return $options->current()->_attributes['value'];
 						}

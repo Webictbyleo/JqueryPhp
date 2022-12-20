@@ -11,59 +11,33 @@ class jqueryphp_methods_replaceWith extends jqueryphp_abstracts_element{
 		}
 		
 		public function run($html=NULL){
+				
 				if(!is_null($html)){
-					if(is_a($html,'DOMNode')){
-						$np = 'HTML';if($this->node->isXml())$np = 'XML';
-						$html = $html->ownerDocument->{'save'.$np}($html);
-						if(!is_scalar($html))return;
-					}elseif(is_a($html,jqmel)){
-						$html = $html->toString();
-						if(!is_scalar($html))return;
+				
+					if(is_a($html,jqmel)){
+						$html = $html->get()[0];
+						if(!$html)return;
+					}else if(is_a($html,jqmdoc)){
+					$html = $html->__toString();
 					}elseif(is_callable($html)){
 						if(is_a($html,Closure)){
 							$callback = Closure::bind($html,$this->node);
-								}
-							$html = call_user_func($callback,$this->node->_token);
-							
-							if(!is_scalar($html))return;
+						}
+						$html = call_user_func($callback,$this->node->_token);
 					}
-					
-					$html = preg_replace('/\s+/',' ',$html);
-					$regex = '/<([a-z0-9\-]+)(.*?)>(?:(.*?)(<\/\1>))?/xsi';
-				if(preg_match($regex,$html,$match)){
-					$match[2] = rtrim($match[2],'/');
-				}
-				
-					if(empty($match[1]))return;
-					$np = 'html';
-					$dc=new domdocument;
-					$dc->preserveWhiteSpace = false;
-					if($this->node->isxml())$np = 'xml';
-					$dc->{'load'.$np}($html);
-					$x = new DomXpath($dc);
-					$new = $x->query('/html/body/'.$match[1])->item(0);
-					//$new = $new->firstChild;
-					
-					$frag = $this->__toDomElement()->ownerDocument->importNode($new,true);
-					$this->__toDomElement()->parentNode->replaceChild($frag,$this->__toDomElement());
-					
-					
-					$node = $this->node->exportNode($frag);
-					
-					$this->node->_attributes = $node->_attributes;
-					$this->node->_name = $node->_name;
-					$this->node->_attrMap = $node->_attrMap;
-					$this->node->_nodeLevel = $node->_nodeLevel;
-					$this->node->_innerHtml = $node->_innerHtml;
-					$this->node->_innerText = $node->_innerText;
-					$this->node->_childElement = $node->_childElement;
-					$this->node->_selector = $node->_selector;
-					$this->node->_localName = $node->_localName;
-					$this->node->_path = $node->_path;
-					$this->node->selector = $node->selector;
-					$this->node->DOMel = $node->DOMel;
-					$this->node->_content = $node->_content;
-					
+					$node = $this->__toDomElement();
+					if(is_string($html)){
+					$newdoc = $node->ownerDocument->createDocumentFragMent();
+					$newdoc->appendxml($html);
+					}else if(is_a($html,'DOMNode')){
+					$html = $node->ownerDocument->importNode($html,true);
+					$newdoc = $html;
+					}else{
+					return;
+					}
+					$frag = $node->parentNode->insertBefore($newdoc,$node->nextSibling);
+					$node->parentNode->removeChild($node);
+					$this->node->exportNode($frag,null,true);
 				}
 			return $this;
 		}

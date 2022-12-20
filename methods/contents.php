@@ -18,13 +18,10 @@ class jqueryphp_methods_contents extends jqueryphp_abstracts_element{
 						
 						$nodes = array();
 						
-					for($i=0;$dom->childNodes->length > $i;$i++){
-						$child = $dom->childNodes->item($i);
-						
-									$nodes[] = $child;
-									unset($child);
-					}
-					
+					$iterator = range(0,$dom->childNodes->length-1);
+					$nodes = array_map(function($i)use($dom){
+						return $dom->childNodes->item($i);
+					},$iterator);
 					$this->node = new jqueryphp_abstracts_nodelist($nodes);
 					return $this;
 			}else{

@@ -15,18 +15,17 @@ class jqueryphp_methods_parent extends jqueryphp_abstracts_element{
 			$path = $this->node->_path;
 			
 			$el = $this->__toDomElement();
+			
 			$doc = jqm_use($this->node->_parentElement);
-							
-				
+			
 				if($el->parentNode){
-			$content = $el->ownerDocument->saveHtml($el->parentNode);
-			$node = $this->createFragment($content,false);
-				if(is_a($node,jqmel)){
-					$node->_path = $el->parentNode->getNodePath();
-					$node->setDomID($this->node->_parentElement.$this->node->_token);
 					
-				
-				
+			$node = $this->exportNode($el->parentNode);
+			
+				if(is_a($node,jqmel)){
+					
+					
+					
 				$this->node = $node;
 				
 				return $this;

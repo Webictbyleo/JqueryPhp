@@ -10,7 +10,7 @@ class jqueryphp_methods_next extends jqueryphp_abstracts_element{
 			$this->node  = $ele;
 		}
 		
-		public function run(){
+		public function run($query=NULL){
 			
 			$dom = $this->__toDomElement();
 			
@@ -19,41 +19,30 @@ class jqueryphp_methods_next extends jqueryphp_abstracts_element{
 							
 								
 							$dom = $dom->nextSibling;
+							
 								if($dom->nodeType !==1){
 									$dom = $dom->nextSibling;
+								}
+								
+								if(!is_null($query) and !empty($query)){
+									$x = $doc->xPath($doc->_DOM);
+									$selector = $doc->match_selector($query,$this->__toDomElement()->getNodePath().'/following-sibling::');
+									$find = $x->query($selector['xpath']);
+									
+										if($find->length){
+											$dom = $find->item(0);
+										}else{
+											$dom = NULL;
+										}
 								}
 								if(!$dom){
 									return $this->node =  new jqueryphp_abstracts_prevObject($selector['selectors']);
 								}
-							//Get the search param
-							$selector = $doc->match_selector($dom->tagName);
 							
-								
-							$path = $dom->getNodePath();
-								
-							//Find this ele in the Dom Node
-							$node = $this->findRelatedDom(array('_path'=>$path));
-							
-								
-							$str = $dom->ownerDocument->savehtml($dom);
-							
-							if(is_a($node,jqmel)){
-								$n = $node->__toDomElement();
-								
-									
-									$this->node = $node;
-									
-									unset($node);
-									return;
-								}
-								
-							$dom = $this->createFragment($str,false);
+							$dom = $this->exportNode($dom);
 							
 							if(is_a($dom,jqmel)){
 					
-				$dom->_path = $path;
-				$dom->selector = new jqueryphp_abstracts_selector($selector);
-				$dom->setDomID($dom->_parentElement.$dom->_token);
 				return $this->node = $dom;
 							}else{
 								//notfound

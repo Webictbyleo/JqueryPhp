@@ -10,31 +10,30 @@ class jqueryphp_methods_before extends jqueryphp_abstracts_element{
 			$this->node  = $ele;
 		}
 		
-		public function run($str=NULL){
-			if($str==NULL)return $this;
-			$document = jqm_use($this->node->_parentElement);
-					
-				$dom = $document->_DOM;
-						if($dom->doctype){
-						$dom->removeChild($dom->doctype);
-						}
-							$find = $this->node->getPathById($dom);
-							if(!$find)$find = $this->node->_path;
-						$xpath = new DomXpath($dom);
-						$find = $xpath->query($find);
-						if($find->length > 0){
-							$child = new DomDocument;
-							$child->loadHtml($str);
-							if($child->doctype){
-						$child->removeChild($child->doctype);
-							}
-							$child->normalize();
-							$frag = $dom->importNode($child->firstChild->firstChild->firstChild,true);
-							
-							$save = $find->item(0)->parentNode->insertBefore($frag,$find->item(0));
-							$this->node->_path = $save->nextSibling->getNodePath();
-							$document->_DOM = $dom;
-						}
+		public function run($new=NULL){
+			if($new==NULL)return $this;
+			if(is_a($new,jqmel)){
+				$new = $new->get()[0];
+				if(!$new)return;
+				}else if(is_a($new,jqmdoc)){
+				$new = $html->__toString();
+			}else if(is_callable($new)){
+				if(is_a($new,'Closure')){
+					$new = Closure::bind($new,$this->node);
+				}
+				$new = call_user_func($new,$this->node->_token);
+				if(!is_scalar($new))return;
+			}
+			$d = $this->__toDomElement();
+			if(is_string($new)){
+				$in = $d->ownerDocument->createDocumentFragMent();
+				$in->appendxml($new);
+				}else if(is_a($new,'DOMNode')){
+				$in = $d->ownerDocument->importNode($new,true);
+			}
+			
+			$d->parentNode->insertBefore($in,$d);
+			$this->node->exportNode($d,null,true);
 			return $this;
 		}
 		
@@ -43,6 +42,30 @@ class jqueryphp_methods_before extends jqueryphp_abstracts_element{
 			return $this->node;
 		}
 		
+		public function getStr(&$str){
+			if(is_array($str) AND !empty($str)){
+				
+						$str = implode('',$str);
+						if(!is_scalar($str))return;
+					}elseif(is_a($str,'DOMNode')){
+						$np = 'HTML';if($this->node->isXml())$np = 'XML';
+						$str = $str->ownerDocument->{'save'.$np}($str);
+						if(!is_scalar($str))return;
+					}elseif(is_a($str,jqmel)){
+						
+						$str = $str->toString();
+						if(!is_scalar($str))return;
+					}elseif(is_callable($str)){
+						
+						if(is_a($str,Closure)){
+							$callback = Closure::bind($str,$this->node);
+								}
+							$str = call_user_func($callback,$this->node->_token);
+							
+							if(!is_scalar($str))return;
+					}
+				return $str;
+		}
 		
 }
 

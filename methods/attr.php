@@ -10,27 +10,19 @@ class jqueryphp_methods_attr extends jqueryphp_abstracts_element{
 			$this->node  = $ele;
 		}
 		
-		public function run($attr=NULL,$value){
+		public function run($attr=NULL,$value=NULL){
 			if(empty($attr)){
 					return $this->node->_attributes;
 				}
 				$this->key = $attr;
 			$attri = $this->node->_attributes;
+			
 			$attr_value = func_get_arg(1);
-			
-			
-			
 						
 							if(is_array($attr)){
 								
 									$attr_value = array_values($attr);
 									
-									/* $attr_value =  preg_replace('#[^\w\-\/\.]#','.',implode('|',$attr_value));
-									
-										if($attr_value){
-											$attr_value =explode('.',$attr_value);
-										} */
-										
 										$keys = array_keys($attr);
 										
 								$attr = @array_combine($keys,$attr_value);
@@ -38,10 +30,19 @@ class jqueryphp_methods_attr extends jqueryphp_abstracts_element{
 								
 							}elseif(is_scalar($attr) AND isset($value) AND !empty($attr)){
 								
-						$attri[$this->key] = preg_replace('#[^\w\-\/\.]#','',func_get_arg(1));
+						$attri[$this->key] = func_get_arg(1);
+						
 							}
-						$this->node->_attributes = $attri;
-						$this->node->saveHtml();
+						
+						if($attri !== $this->node->_attributes){
+								$this->node->_attributes = $attri;
+								$dom = $this->node->__toDomElement();
+								foreach($attri as $k=>$v){
+									$dom->setAttribute($k,$v);
+								}
+								//$this->node->saveHtml();
+								
+							}
 						
 					
 					return $this;
@@ -49,10 +50,10 @@ class jqueryphp_methods_attr extends jqueryphp_abstracts_element{
 		
 		public function get(){
 			
-			if(isset($this->key)){
+			if(isset($this->key) AND is_scalar($this->key)){
 				return $this->node->_attributes[$this->key];
 			}
-			return $this->node->_attributes;
+			return $this->node;
 		}
 		
 		

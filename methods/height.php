@@ -13,6 +13,13 @@ class jqueryphp_methods_height extends jqueryphp_abstracts_Window{
 		public function run($size=NULL){
 				
 			if(!is_null($size)){
+				if(is_callable($size)){
+						if(is_a($size,Closure)){
+							$callback = Closure::bind($size,$this->node);
+								}
+							$size = call_user_func($callback,$this->get());
+							if(!is_scalar($size))return;
+					}
 				 $this->node->attr('height',$size);
 					if(is_numeric($size)){
 						

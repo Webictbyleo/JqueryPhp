@@ -22,7 +22,8 @@ class jqueryphp_methods_show extends jqueryphp_abstracts_element{
 							$attri = $this->node->_attributes;
 							$attri['style'] = urldecode($attr);
 							$this->node->_attributes = $attri;
-							$this->savehtml();
+							$this->__toDomElement()->setAttribute('style',$attr['style']);
+							//$this->savehtml();
 							}
 				}
 			

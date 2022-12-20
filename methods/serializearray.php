@@ -9,11 +9,13 @@ class jqueryphp_methods_serializeArray extends jqueryphp_abstracts_element{
 		
 		public function run(){
 				
-				if($this->node->is('form')->get()){
+				if($this->node->is('form:parent')->get()){
 					$inputs = $this->find(':input[name][name!=""][type!=submit]')->get();
-					
+				}elseif($this->node->is(':input')->get()){
+					$nodes= array($this->node);
+					$inputs = new jqueryphp_abstracts_nodelist($nodes);
+				}
 					if($inputs->_length > 0){
-						
 						$t = $inputs->_length;
 						$values  = array();
 						$named = array();
@@ -32,14 +34,15 @@ class jqueryphp_methods_serializeArray extends jqueryphp_abstracts_element{
 					
 						$this->data = (object)$values;
 					}
-				}
+			}
+
+			public function get(){
+			
+				return isset($this->data) ? $this->data : (new stdClass);
+			}
 			
 		}
 		
-		public function get(){
-			
-			return isset($this->data) ? $this->data : (new stdClass);
-		}
-	}
+		
 	
 ?>

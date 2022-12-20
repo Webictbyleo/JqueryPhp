@@ -43,37 +43,41 @@ defined('SAFE')or die('Not allowed');
 	public function run(){
 		if($this->node instanceOf jqueryphp_abstracts_element){
 			$dom = $this->node->_name;
-				
-			$this->node->_attributes = $this->node->_attributes;
-					$atts = urldecode(http_build_query($this->node->_attributes));
-					
-				 
-				$atts = preg_replace('#([a-z]{1,}\w[=])+(.*?){0}#i','$1"', $atts);
-		
-		
-				$atts = preg_replace('#([a-z]{1,}\w?<=[=\w\.;:\s])?[&]#i','$1"&', $atts);
 			
+			$attr = $this->node->_attributes;
+			array_walk($attr,function(&$v,$k){
+				$v = $k.'="'.str_replace('"','\'',$v).'"';
+			});
+			
+			
+				
 				if(!empty($this->node->_attributes)){
-					$atts .= "\"";
-					
-					parse_str($atts,$attr);
-					$dom .= ' '.implode(' ',explode('&',$atts));
+					$this->attr = implode(' ',$attr);
+					$dom .= ' '.$this->attr;
 					
 				}
+				
+			
 					if(!empty($dom)){
 			$dom = '<'.$dom;
 					}
 					
-				if(!empty($this->node->_localName)){
+				if(!is_null($this->node->_innerHtml) AND is_scalar($this->node->_innerHtml)){
 					//is not inline
 					
 					$dom .= '>';
 					$this->nodeType = 1;
 						if(isset($this->node->_innerHtml)){
-							$dom .= $this->node->_innerHtml;
+							$s = $this->node->toString();
+							$se = preg_match('/<('.$this->node->_name.'*)\b(.*?)>/xsi',$s,$r);
+							
+							$wrap = substr($s,strlen($r[0]));
+						$dom .= substr($wrap,0,strripos($wrap,'</'.$this->node->_name.'>'));
+								
+							//$dom .= $this->node->_innerHtml;
 						}
 						
-						$dom .= $this->node->_localName;
+						$dom .= '</'.$this->node->_name.'>';
 				}else{
 						
 					//Is inline
@@ -89,21 +93,17 @@ defined('SAFE')or die('Not allowed');
 				$this->size  =strlen($dom);
 				$this->length  =$this->node->_length;
 				$this->className =trim($this->node->_attributes['class'],'"\'');
-				$this->attr = $atts;
+				
 				
 				$this->style = trim($this->node->_attributes['style'],'"\'');
 				$this->id = trim($this->node->_attributes['id'],'"\'');
 				$this->tagName = $this->node->_name;
 				$this->modified = time();
 				$this->innerHtml = $this->node->_innerHtml;
+				$this->textContent = $this->node->text()->get();
 				$this->selector = $this->node->_selector;
 				$this->path = $this->node->_path;
 					
-					if($this->nodeType ==1){
-						$regex = '/<['.$this->node->_name.'+].*?>([a-z0-9\s]+)<\/'.$this->node->_name.'>/is';
-						preg_match($regex,$dom,$text);
-						$this->textContent = $text[1];
-					}
 						
 					
 				$this->lastdom = $dom;

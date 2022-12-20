@@ -16,42 +16,23 @@ class jqueryphp_methods_parentsUntil extends jqueryphp_abstracts_element{
 			
 			 $ns = jqm_use($this->node->_parentElement);
 			
-			$done = true;
 			$node = $dom;
-				while($done!=false){
-						if($node->parentNode){
-							$node = $node->parentNode;
-								if($node->nodeType !== 1)continue;
-								
-								if(is_a($selector,'DomElement') AND $node->isSameNode($selector)){$done = false;break;}
-									
-							$el = $this->createFragment($dom->ownerDocument->saveHtml($node),false);
-							$el->_path = $node->getNodepath();
-							if(is_a($selector,jqmel) AND $selector->_path===$el->_path){
-								$done = false;
-										break;
-									}
-							
-							$el->_parentElement = $this->node->_parentElement;
-							$el->_parent_path = $this->node->_parent_path;
-							$el->_prev_path = $this->node->_prev_path;
-							$el->_next_path = $this->node->_next_path;
-							$el->setDomID($this->node->_parentElement.$this->node->_token);
-							$el->selector = $ns->match_selector($node->tagName.'[data-dom-id="'.key($el->_domId).'"]',$el->_path.'::',false);
-								if(!empty($selector)){
-							$is = $el->is($selector)->get();
-								if($is ===true){
-									$done = false;
-									break;
-								}
-								}
-							$nodes[] = $el;
-							
-						}else{
-							$done = false;
-							break;
-						}
-				}
+			
+				
+				$x = $ns->xpath($dom->ownerDocument);
+				
+				$selector = $ns->match_selector($selector);
+				$find = $x->query($dom->getNodePath().'/ancestor::*[not('.$selector['xpath'].')]');
+					if($find->length){
+						$iterator = range(0,$find->length-1);
+					$node = $this->node;
+				$nodes = array_map(function($i)use($find,$node){
+						$item = $find->item($i);
+						$ele = $node->exportNode($item);
+						return $ele;
+					},$iterator);
+					}
+					
 					if(!isset($nodes) || empty($nodes)){
 						return $this->node = new jqueryphp_abstracts_prevObject;
 					}

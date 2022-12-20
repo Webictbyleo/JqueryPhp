@@ -18,6 +18,13 @@ class jqueryphp_methods_addClass extends jqueryphp_abstracts_element{
 					if(!preg_match('/([\'"])+/',$attr['class'],$m)){
 						$m[1] = '"';
 					}
+					if(is_callable($classes)){
+						if(is_a($classes,Closure)){
+							$callback = Closure::bind($classes,$this->node);
+								}
+							$classes = call_user_func($callback,$attr['class']);
+							if(!is_scalar($classes))return;
+					}
 					$attr['class'] = trim($attr['class'],$m[1]);
 					$classmap = explode(' ',$attr['class']);
 					$find = str_ireplace($classes,'*jqmclass',$classmap,$c);
@@ -29,8 +36,8 @@ class jqueryphp_methods_addClass extends jqueryphp_abstracts_element{
 						
 						$attr['class'] = preg_replace('#[\.\'\"\']#','',implode(' ',$classmap));
 						$this->node->_attributes = $attr;
-						
-						$save = $this->node->saveHtml();
+						$this->node->__toDomElement()->setAttribute('class',$attr['class']);
+						//$this->node->saveHtml();
 						
 						
 						
@@ -41,7 +48,7 @@ class jqueryphp_methods_addClass extends jqueryphp_abstracts_element{
 		
 		public function get(){
 			
-			return true;
+			return $this->node;
 		}
 		
 		

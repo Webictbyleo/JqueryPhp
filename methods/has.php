@@ -18,7 +18,7 @@ class jqueryphp_methods_has extends jqueryphp_abstracts_element{
 					$query = $document->match_selector($ele);
 					
 				}elseif(is_a($ele,jqmel)){
-					$ele = $ele->selector->selectors;
+					$ele = $ele->_name;
 					$query = $document->match_selector($ele);	
 				}else{
 					$this->node = new jqueryphp_abstracts_prevObject;
