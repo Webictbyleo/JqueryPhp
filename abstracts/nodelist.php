@@ -1,7 +1,7 @@
 <?php
 defined('SAFE')or die();
 
-	class jqueryphp_abstracts_nodelist extends jqueryphp_abstracts_element{
+	class jqueryphp_abstracts_nodelist extends jqueryphp_abstracts_element implements Iterator, Countable, ArrayAccess{
 		
 		protected $nodeList;
 		public $_length;
@@ -12,6 +12,7 @@ defined('SAFE')or die();
 		private $_ns;
 			public function __construct(array $nodes,$_ns=NULL){
 				if(empty($nodes))$nodes  =array();
+				
 				$this->nodeList = new ArrayIterator($nodes);
 						if($this->nodeList->valid){
 					$this->seek(0);
@@ -42,14 +43,9 @@ defined('SAFE')or die();
 						}elseif($this->count() === 1){
 							
 							$call = call_user_func_array(array($this->current(),$method),$arg);
-							//$n = $call->getNode();
-							if($method==='parent'){
-							//var_dump($call);
-							}
 						
-							
 						}
-				
+					
 				return $call;
 			}
 			public function last(){
@@ -104,9 +100,10 @@ defined('SAFE')or die();
 		}
 		
 		public function not($query){
+			
 			$e = $this->each(function($i,$e,$query){
 					
-					if($e->not($query)->get()===true){
+					if($e->is($query)->get()===false){
 						
 						return($e);
 						}
@@ -116,11 +113,21 @@ defined('SAFE')or die();
 		}
 		
 		public function filter($query){
+			
 			$e = $this->each(function($i,$e,$query){
+				
 					if(is_callable($query) || function_exists($query)){
+						
+						if(is_a($query,Closure)){
+							
+							$query = Closure::bind($query,$this);
+								}
 						$is = call_user_func($query,$e);
+						
 					}elseif(is_scalar($query)){
+					
 			$is = $e->is($query)->get();
+			
 					}
 						
 					if($is===true){
@@ -145,7 +152,30 @@ defined('SAFE')or die();
 					.$index.')');
 			}
 		}
-		
+		public function lt($index){
+			if(is_numeric($index)){
+				$index = (int)$index;
+			}
+			$e = $this->nodeList->getArrayCopy();
+			$t = count($e);
+			$e = array_slice($e,0,(($index+1)-1),false);
+				if(!empty($e))
+			return new jqueryphp_abstracts_nodelist($e);
+		return new jqueryphp_abstracts_prevObject($this->_selector.':lt('
+					.$index.')');
+		}
+		public function gt($index){
+			if(is_numeric($index)){
+				$index = (int)$index;
+			}
+			$e = $this->nodeList->getArrayCopy();
+			$e = array_slice($e,$index+2,NULL,false);
+			
+			if(!empty($e))
+			return new jqueryphp_abstracts_nodelist($e);
+		return new jqueryphp_abstracts_prevObject($this->_selector.':gt('
+					.$index.')');
+		}
 		public function map($callback){
 					if($this->length < 1)return false;
 			$is = (is_callable($callback) || function_exists($callback));
@@ -179,6 +209,10 @@ defined('SAFE')or die();
 						$this->seek($this->keys[$i]);
 						
 						if($this->current()->_length ===false)continue;
+						$el = $this->current()->data('DOMel')->get();
+						if(empty($el))continue;
+						
+						if(!$el->tagName)continue;
 						
 							if($is_callable===true){
 								
@@ -245,6 +279,45 @@ defined('SAFE')or die();
 			public function refresh(){
 				
 			}
+			public function get($i=NULL){
+					if(is_numeric($i)){
+						$this->nodeList[$i];
+					}else{
+				return $this->nodeList->current();
+					}
+			}
+		public function rewind(){
+			
+			return $this->nodeList->seek(0);
+		}
+	public function key(){
+		return $this->nodeList->key();
+	}
+	public function next(){
+		$this->nodeList->next();
+	}
+	
+	public function valid(){
+		return $this->nodeList->valid() and $this->length > 0;
+	}
+	
+	public function offsetExists($offset) {
+		return ($this->valid() and $this->nodeList->offsetExists($offset));
+	}
+	
+	public function offsetGet($offset) {
+		
+		if(!$this->valid())return false;
+		return ($this->nodeList->offsetget($offset));
+	}
+	
+	public function offsetSet($offset, $value) {
+
+	}
+	
+	public function offsetUnset($offset) {
+		
+	}
 	}
 
 ?>

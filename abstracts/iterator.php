@@ -43,8 +43,10 @@ defined('SAFE')or die();
 			 public function first(){
 				
 				$k = array_keys($this->__documentMap);
-				$i = current($i);
+				$i = current($k);
+				
 				$item = $this->offsetGet($i);
+				
 				if(is_a($item,jqmel)){
 				return new jqueryphp_abstracts_nodelist(array($i=>$item));
 					}
@@ -156,8 +158,19 @@ defined('SAFE')or die();
 		public function __invoke(){
 			
 				if(is_a($this,jqmdoc)){
-					
-						$node = $this->find(func_get_arg(0));	
+						$sp = func_get_arg(0);
+						if(strip_tags($sp) != $sp){
+							$dom = jqm($sp,'*',$this->isxml);
+								$s = ':root';
+								if(!$this->isXml AND strpos($sp,'<body') ===false){
+									$s = 'html > body > *:first';
+								}
+							$node = $dom->find($s);
+							
+							return $node;
+						}else{
+						$node = $this->find($sp);
+						}						
 						if($node->length > 0){
 							return new jqueryphp_abstracts_nodelist($this->export());
 						}

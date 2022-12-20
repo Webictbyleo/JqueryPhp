@@ -1,10 +1,11 @@
 <?php
 defined('SAFE')or die();
-	 class jqueryphp_abstracts_element{
+	 class jqueryphp_abstracts_element implements ArrayAccess{
 		
 		protected  static $_selector,
 		$_content,
 		$_attributes,
+		$_style,
 		$_baseUrl,
 		$_childElementCount,
 		$_childNodes,
@@ -44,6 +45,32 @@ defined('SAFE')or die();
 			return true;
 		}
 		
+		public function offsetSet($i,$v){}
+		public function offsetUnset($i){}
+		public function offsetGet($i){
+			
+			if(isset($this->node) AND is_a($this,jqmel)){
+					$node = $this->node;
+				}else{
+					$node = $this;
+				}
+			return ($node->get()->get());
+		}
+		public function offsetExists($i){
+			return $i==0||$i===null ? true : false;
+		}
+		public function __get($n){
+			if(isset($this->node) AND is_a($this,jqmel)){
+					$node = $this->node;
+				}else{
+					$node = $this;
+			}
+			if($n==='style'){
+				
+				return new jqueryphp_methods_style($node);
+			}
+			return $node->data($n)->get();
+		}
 		public function setDomID($id){
 			if(get_class($this) !==jqmel)return false;
 			if(!isset($this->_domId)){
@@ -56,7 +83,7 @@ defined('SAFE')or die();
 				$d=	jqm_use($this->_parentElement);
 				$k = key($this->_domId);
 				//$this->attr('id',$k);
-				$this->_attributes['data-dom-id'] = $k;
+				//$this->_attributes['data-dom-id'] = $k;
 					
 				//$this->saveHTML(true);
 				//var_dump($this->DOMel);
@@ -64,9 +91,9 @@ defined('SAFE')or die();
 					
 					$this->isxml = $d->isxml;
 					if(!is_null($this->_domId[$k])){
-				$this->_attributes['data-dom-id'] =  $this->_domId[$k];
+				//$this->_attributes['data-dom-id'] =  $this->_domId[$k];
 					}
-					$this->DOMel->setAttribute('data-dom-id',$k);
+					//$this->DOMel->setAttribute('data-dom-id',$k);
 				
 			}
 			
@@ -80,7 +107,6 @@ defined('SAFE')or die();
 			
 			$class = 'jqueryphp_methods_'.strtolower($method);
 				if(!class_exists($class)){
-					
 					return $this;
 				}
 				//Support chaining;
@@ -93,7 +119,9 @@ defined('SAFE')or die();
 				if(is_a($node,jqmnull))return $this;
 				
 			$call = new $class($node);
+			
 			$parse = call_user_func_array(array($call,'run'),$arg);
+			
 			
 			return $call;
 		}
@@ -102,9 +130,7 @@ defined('SAFE')or die();
 			return $this;
 		}
 		
-		protected function get(){
-			return ;
-		}
+		
 		
 		public function getInst(){
 			
@@ -139,8 +165,7 @@ defined('SAFE')or die();
 					$doc->removeChild($doc->doctype);
 						}
 					//$doc->preserveWhiteSpace = false;
-					
-					$path = new DomXpath($doc);
+					$path = $document->xpath($doc);
 					$qs = $node->_name.'[@data-dom-id = "'.key($node->_domId).'"]';
 						$get = $path->query('descendant-or-self::'.$qs);
 						
@@ -169,19 +194,19 @@ defined('SAFE')or die();
 			return ($array);
 		}
 		
-		protected function exportNode(DomNode &$node,&$selector=NULL,$mergeself=false){
+		protected function exportNode(DomNode &$node,$selector=NULL,$mergeself=false){
 			$nodens = $this->getNode();
 			$document = jqm_use($nodens->_parentElement);
 			$item = $node;
+			$query = $selector;
 			
-							
 			if(!is_array($selector)){
 				$selector = array(
 								'pattern'=>'/<('.$node->tagName.')\b(.*?)>(?:(.*?)(<\/\1>))?/xsi',
 								'selectors'=>$node->tagName,
 								'tag'=>$node->tagName,
 								'xpath'=>'descendant-or-self::'.$node->tagName
-								);;
+								);
 			}
 			
 					if($document->isxml){
@@ -239,19 +264,9 @@ defined('SAFE')or die();
 					if(!$document->isxml){
 					$m[2] = str_replace("\n",'',$m[2]);
 					}
-					$repair = preg_replace('/=([\'"])\s/','=$1',$m[2]);
 					
-					if(preg_match_all('#([a-z0-9\-_]{1,}) =? (?:(?:[\'"])(.*?)[\'"])?#ix', $repair, $test)){
-							
-							if(empty($test[1])){
-								$attr = array();
-							}else{
-								$attr = @array_combine($test[1],$test[2]);
-								
-							}
-						}
-						
 					$ele = $document->toElement($m);
+					
 					$ele->_selector = $nodens->_selector.' '.$selector['selectors'];
 				$ele->_nodeLevel = $selector['pattern'];
 				$ele->_length = 1;
@@ -263,12 +278,19 @@ defined('SAFE')or die();
 				$ele->_prev_path = $map->_prev_path;
 				$ele->_next_path = $map->_next_path;
 				$ele->_parent_path = $map->_parent_path;
-				$ele->_attributes = $attr;
+				//$ele->_attributes = $attr;
 				$ele->isxml = $nodens->isxml;
 				$ele->selector = new jqueryphp_abstracts_selector($selector);
+				
 				$ele->setDom($node);
 				$ele->setDomID($ele->_token);
-				
+				if($mergeself===true){
+					$g = ['_attributes','_name','_attrMap','_nodeLevel','_innerText','_innerHtml','_selector','_localName','_path','selector','DOMel','_content'];
+					foreach($g as $i=>$k){
+						$nodens->{$k} = $ele->{$k};
+					}
+					
+				}
 				return $ele;
 		}
 		
@@ -309,7 +331,7 @@ defined('SAFE')or die();
 							if($this->isxml())$np = 'xml';
 				if(is_a($doc,jqmdoc)){
 						$dom = new domDocument;
-						$dom->{'load'.$np}(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'));
+						$dom->{'load'.$np}(mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8'),LIBXML_PARSEHUGE);
 						
 						if($dom->doctype){
 				$dom->removeChild($dom->doctype);
@@ -475,8 +497,8 @@ defined('SAFE')or die();
 						$node->_domId = array($k=>$node->_attributes['data-dom-id']);
 					}
 						$attr = $node->_attributes;
-						$attr['data-dom-id'] = $node->_domId[$k];
-						$node->_attributes = $attr;
+						//$attr['data-dom-id'] = $node->_domId[$k];
+						//$node->_attributes = $attr;
 						
 						
 					
@@ -504,25 +526,9 @@ defined('SAFE')or die();
 			
 					if($doc->doctype){
 				$doc->removeChild($doc->doctype);
-					}	$k = key($node->_domId);
-					if($refresh ==true){
-						
-						$this->refresh();
-						
-						$node->_attributes['data-dom-id'] = $k;
-						
-					}else{
-						
-							if($node->_domId[$k]===NULL){
-							$attr = $node->_attributes;
-							unset($attr['data-dom-id']);
-							$node->_attributes = $attr;
-							
-							}else{
-						$node->_attributes['data-dom-id'] = $node->_domId[$k];
-							}
-						
-					}
+					}	
+					$k = key($node->_domId);
+					
 					
 					
 				$newdoc = new domDocument;
@@ -531,7 +537,7 @@ defined('SAFE')or die();
 						
 			if($this->isxml() ===false){
 				
-				$newdoc->{'load'.$np}(mb_convert_encoding($dom->lastdom, 'HTML-ENTITIES', 'UTF-8'));
+				$newdoc->{'load'.$np}(mb_convert_encoding($dom->lastdom, 'HTML-ENTITIES', 'UTF-8'),LIBXML_PARSEHUGE);
 				$newdoc->preserveWhiteSpace = true;
 			$newdoc->substituteEntities = true;
 			$newdoc->formatOutput = true;
@@ -569,7 +575,7 @@ defined('SAFE')or die();
 							
 						
 					
-			$node->_attributes['data-dom-id'] = $node->_domId[$k];
+			//$node->_attributes['data-dom-id'] = $node->_domId[$k];
 			
 				
 			return $frag->getNodepath();
@@ -601,11 +607,10 @@ defined('SAFE')or die();
 					
 					$document = jqm_use($this->_parentElement);
 					$doc = $document->_DOM;
-					
 						}
-						$x = new DomXpath($doc);
-						$qs = $this->_name.'[@data-dom-id = "'.key($this->_domId).'"]';
-					$find = $x->query('descendant-or-self::'.$qs);
+						$x = $document->xpath($doc);
+						$qs = $this->DOMel->getNodePath();
+						$find = $x->query($qs);
 					
 						if($find->length > 0){
 							$find = $find->item(0);
@@ -621,21 +626,22 @@ defined('SAFE')or die();
 				
 					$document = jqm_use($this->_parentElement);
 					$doc = $document->_DOM;
-					
-						$x = new DomXpath($doc);
-						$qs = $this->_name.'[@data-dom-id = "'.key($this->_domId).'"]';
-					$find = $x->query('descendant-or-self::'.$qs);
+						$x = $document->xpath($doc);
+						$qs = $this->DOMel->getNodePath();
+					$find = $x->query($qs);
 					
 						if($find->length > 0){
 							$find = $find->item(0);
 						}
-						
+					
 					if($find AND is_a($find,'DomElement')){
 							if(!$document->isxml){
+							
 						$this->replaceWith($doc->saveHTML($find));
 							}else{
 								
 								$this->replaceWith($doc->savexml($find));
+								
 							}
 							
 						$this->get_selector();
@@ -702,7 +708,7 @@ defined('SAFE')or die();
 				if($this->isxml())$ns = 'xml';
 				
 				$n = $d->ownerDocument->{'save'.$ns}($d);
-				$n = preg_replace('/\s+data-dom-id\=(?:(?:[\'"])+[a-z0-9]+[\'"])/x','',$n);
+				//$n = preg_replace('/\s+data-dom-id\=(?:(?:[\'"])+[a-z0-9]+[\'"])/x','',$n);
 				return $n;
 			}
 			return NULL;

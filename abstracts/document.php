@@ -1,6 +1,6 @@
 <?php
 defined('SAFE')or die();
-use Symfony\Component\CssSelector\CssSelectorConverter;
+use Symfony\Component\CssSelector;
 	class jqueryphp_abstracts_document extends jqueryphp_abstracts_iterator  implements SeekableIterator, Countable, ArrayAccess{
 		
 			protected $__localLength;
@@ -24,7 +24,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 			);
 			private $_namespace;
 			public $isxml = false;
-			private $cssXpath;
+			private static $cssXpath;
 		public function __construct($document,$tagname='*',$xml=false){
 			
 			
@@ -38,7 +38,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 			
 			//Detect if $document is a valid full document
 			
-				$this->cssXpath = $x = new CssSelectorConverter(($xml ==false));
+				self::$cssXpath = $x = new CssSelector\CssSelectorConverter(($xml ==false));
 			$this->__documentMap = array();
 			$DOM = new DOMDocument;
 			
@@ -48,15 +48,15 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 			$DOM->substituteEntities = true;
 			$DOM->formatOutput = true;
 			$DOM->encoding = 'utf-8';
-				if($xml==false){
-					$document = mb_convert_encoding($document, 'HTML-ENTITIES', 'UTF-8');
-					
-			$DOM->loadHTML($document);
+				$np = $xml==false?'html':'xml';
+				if(is_file($document)){
+				$DOM->load($document,LIBXML_PARSEHUGE);
 				}else{
-					
-					$DOM->loadXML($document);
-					
+				$DOM->{'load'.$np}($document,LIBXML_PARSEHUGE);
 				}
+				
+				
+				
 			
 			$DOM->normalizeDocument();
 			
@@ -64,25 +64,18 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 			$this->_length = false;
 			$this->length = false;
 				if($DOM->doctype){
-					//$this->__schema['doctype'] = $DOM->saveHTML($DOM->doctype);
 			$DOM->removeChild($DOM->doctype);
 				}
 			
-			//$output = $DOM->saveHTML();
-			
-			//$this->__documentRaw = $output;
 				$this->_DOM = $DOM;
 			
 				
 			$this->_selector = $tagname;
-			/* $s = preg_match('/<([a-z0-9\-]+)(.*?)>(?:(.*?)(<\/\1>))?/xsi',$document,$match);
-			if($s && $match[1]){
-				$s = $this->find($match[1].':first');
-				var_dump($s);
-			} */
 			
 		}
-		
+		public function getDocument(){
+		return $this->_DOM;	
+		}
 		public function find($query){
 			return $this->search($query);
 		}
@@ -98,7 +91,6 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 					$t = $this->count();
 					
 				$keys = array_keys($this->__documentMap);
-				
 				
 				
 				$hasHTML = ($html !==true);
@@ -126,12 +118,10 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 		}
 		
 		
-		public function search($query,$prefix=NULL){
+		public function search($query){
 			$query = trim($query);
-			if(is_null($prefix)){
-				$prefix = 'descendant-or-self::';
-			}
-			$query_arg = $this->match_selector($query,$prefix);
+			
+			$query_arg = $this->match_selector($query);
 			
 				if(empty($query_arg))return false;
 				if(empty($query_arg['pattern']))return false;
@@ -227,14 +217,14 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 				return $passed;
 		}
 		//Build the required preg for the query
-		public function match_selector($params,$xpathPrefix='descendant-or-self::',$includeXpath=true){
+		public function match_selector($params,$ns=null){
 			//Check multiple query selectors
 			/* if(strpos($params,',')){
 				$this->_multiselector = explode(',',$params);
 				$params = array_shift($this->_multiselector);
 				
 			} */
-			
+			$includeXpath=true;
 			$selectors = array();
 			preg_match('#(?<![\.\#\[\]])([A-Z0-9]+)?#is',$params,$findtag);
 			
@@ -262,16 +252,24 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 					
 			
 				if($includeXpath===true){
-			$xpath = $this->getXpath($params,$xpathPrefix);
+			$xpath = $this->getXpath($params,(isset($ns) ? $ns :null));
 				}
 			
 			return array('pattern'=>$regex,'selectors'=>$params,'specifier'=>$selectors,'filters'=>$selected_filters,'tag'=>$tag,'attributes'=>$attri,'xpath'=>$xpath);
 				 
-			
-			
 		}
+		
 		private function getChildrenQuote(&$param,$quote){
 			
+		}
+		
+		public function registerNamespace(string $prefix=null){
+			if(!isset($prefix)){
+			unset($this->namespacePrefix);
+			return $this;	
+			}
+			$this->namespacePrefix = $prefix;
+			return $this;
 		}
 		public function getXpath($query,$prefix=NULL){
 			 $search = array(
@@ -281,12 +279,17 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
   );
   '/<('.$tag.'*)\b([^>]*)>(?:(.*?)(<\/\1>))?/ix';
 			//$query = preg_replace($search,'',$query);
-				if(!isset($this->cssXpath)){
-					$this->cssXpath = new CssSelectorConverter(($this->isxml ==false));
+				
+				if(!isset(self::$cssXpath)){
+					self::$cssXpath = new CssSelector\CssSelectorConverter(($this->isxml ==false));
 				}
-			
-		$path = ($this->cssXpath->toXPath($query,$prefix));
-		//var_dump(func_get_arg(0).'=>'.$query);
+				
+		$path = (self::$cssXpath->toXPath($query,$prefix));
+		if($this->isxml and isset($this->namespacePrefix)){
+			$path = preg_replace('#\%ns#i',$this->namespacePrefix.':',$path);
+		}else{
+		$path = preg_replace('#\%ns#i','',$path);
+		}
 		
 		return $path;
 					
@@ -296,19 +299,24 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 			$ele = new jqueryphp_abstracts_element;
 						$ele->_content = $props[0];
 						//$attrString = preg_replace('/([\'"])+\s/i','$1&', $props[2]);
-						preg_match_all('/([\w_-]+)\b=\"([^\"]+)\"/',$props[2],$mt);
+						preg_match_all('/([\w\_\-\:]+)(?:=["\']([^\"\']+){0,}["\']{0,}){0,}/i',$props[2],$mt);
 						$attr = [];
+						
+						
 						foreach($mt[1] as $i=>$k){
 							$k = trim($k);
-							$attr[$k] = trim($mt[2][$i],' ');
+							$v = trim($mt[2][$i],' "\'');
+							
+							$attr[$k] = $v;
 						}
+						
 						//Get style
-						if(preg_match('/style=([\'"]+)(.+)\1/',$props[2],$m)){
+						if(preg_match('/style=(?:([\'"])(.*?)\1|\'(.*?)\')/s',$props[2],$m)){
+							
 							$attr['style'] = $m[2];
 						}
 						
 						
-						//var_dump($props[2]);
 						
 						$ele->_attrMap = $props[2];
 						$ele->_name = $props[1];
@@ -316,17 +324,27 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 						$ele->_innerHtml = $props[3];
 						$ele->_innerText = str_replace(array("\n","\r"),'',strip_tags($props[3]));
 						
-						//Transverse the children
-						$compact = trim($props[3]);
-						$ishtml = (($pos = strpos($compact,'<'))===0);
-							if($ishtml){
-								//try to get the first tag used
-								$pos = strcspn($compact,' ');
-								$ele->_childElement = str_replace('>','',trim(substr($compact,1,$pos)));
-							}
+						
 						
 						
 						$ele->_attributes = $attr;
+						
+						
+						if(isset($attr['style']) and !empty($attr['style'])){
+							
+							$style = array();
+							$stl = $attr['style'];
+							$stl = trim($stl,';').';';
+							preg_match_all('/([a-z\_\-]+)\:([^;].*?);/i',$stl,$m);
+							
+							foreach($m[1] as $i=>$j){
+								$n = strtolower($j);$v = trim($m[2][$i]);
+								$style[$n] = $v;
+							}
+							//$ele->style = $style;
+							
+							$ele->_style = new jqueryphp_abstracts_cssStyle($style);
+						}
 						/* if(strlen($props[2])==497){
 						//preg_match_all('/(\w)=([\'"]+)(.+)\2/',$props[2],$mt);
 						//preg_match('/style=([\'"]+)(.+)\1/',$props[2],$m);
@@ -336,13 +354,29 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 						} */
 						return $ele;
 		}
-		
-		private function perform_query($pattern){
+		public function Xpath(Domdocument $d){
+			$x = new DomXpath($d);
+			if($this->isxml){
+				$ns= $d->firstChild->namespaceURI;
+				$nk = $d->firstChild->nodeName;
+				if(empty($ns) and isset($this->namespacePrefix) and $this->namespacePrefix==='svg'){
+				$ns = 'http://www.w3.org/2000/svg';
+				$nk = 'svg';
+				}
+				if(!empty($ns)){
+					
+					$x->registerNamespace($nk,$ns);	
+				}
+			}
+			
+			return $x;
+		}
+		public function perform_query($pattern){
 			
 			$d = $this->_DOM;
-			
-			$x = new DomXpath($d);
+			$x = $this->Xpath($d);
 			$namespace = $this->_namespace;
+			
 			$found = $x->query($pattern['xpath']);
 			
 				$t = $found->length;
@@ -412,7 +446,7 @@ use Symfony\Component\CssSelector\CssSelectorConverter;
 						
 				
 				$ele = $this->toElement($all);
-				$ele->_selector = $this->_selector.' '.$pattern['selectors'];
+				$ele->_selector = $pattern['selectors'];
 				$ele->_nodeLevel = $pattern['pattern'];
 				$ele->_length = 1;
 				$ele->length = 1;
