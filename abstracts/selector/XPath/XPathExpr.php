@@ -37,6 +37,8 @@ class XPathExpr
      * @var string
      */
     private $condition;
+	
+	private $blocked = false;
 
     /**
      * @param string $path
@@ -49,6 +51,7 @@ class XPathExpr
         $this->path = $path;
         $this->element = $element;
         $this->condition = $condition;
+        $this->blocked = '';
 
         if ($starPrefix) {
             $this->addStarPrefix();
@@ -62,7 +65,29 @@ class XPathExpr
     {
         return $this->element;
     }
-
+	
+	
+	public function append($combiner){
+		
+		$this->condition = $this->condition.$combiner;
+		
+		return $this;
+	}
+	
+	public function setBlocked($expr){
+		$this->blocked = $expr;
+		
+		return $this;
+	}
+	
+	
+	public function setCondition($condition){
+		
+		if(!empty($condition)){
+			$this->condition= $condition;
+		}
+		return $this;
+	}
     /**
      * @param $condition
      *
@@ -82,6 +107,10 @@ class XPathExpr
     {
         return $this->condition;
     }
+	
+	public function getPath(){
+		return $this->path;
+	}
 
     /**
      * @return XPathExpr
@@ -134,9 +163,34 @@ class XPathExpr
      */
     public function __toString()
     {
-        $path = $this->path.$this->element;
-        $condition = null === $this->condition || '' === $this->condition ? '' : '['.$this->condition.']';
-
-        return $path.$condition;
+			if(!empty($this->condition)){
+			$pr1 = '[';
+			$pr2 = ']';
+				
+			}
+		
+        $path = rtrim($this->path,'%ns').'%ns'.$this->element;
+		
+		if($this->blocked !==false and strpos($this->path,'//') !==0){
+		$path = '//'.$path;	
+		$this->blocked = false;
+		}
+		
+        $condition = null === $this->condition || '' === $this->condition ? '' : $this->condition;
+		
+		if($condition and !in_array($condition,array(':first',':last')) and strrpos($condition,']')!==strlen($condition)-1){
+			$condition = $pr1.$condition.$pr2;
+		}
+		$q = $path.$condition;
+			if(!empty($condition) and preg_match('/(\:first|\:last)/',$condition,$m)){
+				if($m[1]==':first'){
+				$q = '('.str_replace(':first','',$q).')[1]';
+				}else{
+				$q = '('.str_replace(':last','',$q).')[last()]';
+				}
+				
+			}
+			
+        return $q;
     }
 }

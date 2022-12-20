@@ -132,7 +132,7 @@ class Translator implements TranslatorInterface
 
             $selectors[$index] = $this->selectorToXPath($selector, $prefix);
         }
-
+		
         return implode(' | ', $selectors);
     }
 

@@ -42,6 +42,11 @@ class FunctionExtension extends AbstractExtension
             'nth-last-of-type' => array($this, 'translateNthLastOfType'),
             'contains' => array($this, 'translateContains'),
             'lang' => array($this, 'translateLang'),
+            'gt' => array($this, 'translateGt'),
+            'lt' => array($this, 'translateLt'),
+            'has' => array($this, 'translateHas'),
+            'parent' => array($this, 'translateParent'),
+            'eq' => array($this, 'translateEq'),
         );
     }
 
@@ -67,11 +72,12 @@ class FunctionExtension extends AbstractExtension
         if ($addNameTest) {
             $xpath->addNameTest();
         }
-
+		
+		
         if (0 === $a) {
             return $xpath->addCondition('position() = '.($last ? 'last() - '.($b - 1) : $b));
         }
-
+		
         if ($a < 0) {
             if ($b < 1) {
                 return $xpath->addCondition('false()');
@@ -174,6 +180,35 @@ class FunctionExtension extends AbstractExtension
             Translator::getXpathLiteral($arguments[0]->getValue())
         ));
     }
+	 public function translateHas(XPathExpr $xpath,FunctionNode $function)
+    {
+		
+			$argument = $function->getArguments();
+			$n = $argument[0]->getvalue();
+			
+				if(empty($argument[0]) || empty($n)){
+					throw new ExpressionErrorException(
+                    'Expected a single string or identifier for :has(), got '
+                    .implode(', ', $argument)
+                );
+				}
+				
+        return $xpath->addCondition("(descendant::*[name(.) = '$n'])");
+    }
+	
+	 public function translateParent(XPathExpr $xpath,FunctionNode $function)
+    {
+			$argument = $function->getArguments();
+			$n = $argument[0]->getvalue();
+				if(empty($argument[0]) || empty($n)){
+					throw new ExpressionErrorException(
+                    'Expected a single string or identifier for :parent(), got '
+                    .implode(', ', $argument)
+                );
+				}
+				
+        return $xpath->addCondition("(ancestor::*[name(.) = '$n'])");
+    }
 
     /**
      * @param XPathExpr    $xpath
@@ -200,7 +235,29 @@ class FunctionExtension extends AbstractExtension
             Translator::getXpathLiteral($arguments[0]->getValue())
         ));
     }
-
+	
+	public function translateEq(XPathExpr $xpath, FunctionNode $function){
+		
+		list($a, $b) = Parser::parseSeries($function->getArguments());
+		$b = $b+1;
+		return $xpath->addCondition('position() = '.$b);
+		 
+	}
+	public function translateGt(XPathExpr $xpath, FunctionNode $function){
+		
+		list($a, $b) = Parser::parseSeries($function->getArguments());
+		$b = $b+1;
+		return $xpath->addCondition('position() > '.$b);
+		 
+	}
+	public function translateLt(XPathExpr $xpath, FunctionNode $function){
+		
+		list($a, $b) = Parser::parseSeries($function->getArguments());
+		
+		$b = $b+1;
+		return $xpath->addCondition('position() < '.$b);
+		 
+	}
     /**
      * {@inheritdoc}
      */

@@ -62,8 +62,12 @@ class CssSelectorConverter
 		}
 		}
 		public static function loadClass($class){
+			if(strpos($class,__NAMESPACE__) ===false)return;
 			$path = __DIR__.'\\'.substr($class,strlen(__NAMESPACE__));
+				$path = str_replace('//','/',implode('/',explode('/',str_replace('\\','/',$path))));
+				
 			if(file_exists($path.'.php')){
+			
 				require_once($path.'.php');
 			}
 		}
@@ -80,6 +84,7 @@ class CssSelectorConverter
      */
     public function toXPath($cssExpr, $prefix = 'descendant-or-self::')
     {
+		
         return $this->translator->cssToXPath($cssExpr, $prefix);
     }
 }
