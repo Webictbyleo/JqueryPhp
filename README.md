@@ -123,6 +123,7 @@ Currently, [click,load] event is implemented fully as we work towareds coming up
 
  HOW TO USE
 =====================
+```php
   require("PATH_TO_LIBRARY/init.php");
   $j = jqm($html);
   //Search html
@@ -140,19 +141,20 @@ Currently, [click,load] event is implemented fully as we work towareds coming up
   //Do things
   })
   $win->load($PATH_TO_LOCAL_FILE,'file');
-
+```
  or
- 
+ ```php
   $win->load($URL_TO_HTTP_FILE,'http');
-
+```
  or
- 
+ ```php
   $win->load($HTML_STRING,'blobdata')
-
+```
 USES
 =========
 Endless!
 Though I developed it for a custom PHP project for presentation/templating purposes.
+ * Transverse XML/HTML document in an easy jqyery-like style
  * Web Scraper
  * Website Screenshot
  * Window Class is readily available to be implemented with a Browser class
@@ -169,7 +171,5 @@ Jquery javascript library
 Author
 =========
 Leo.I.Anthony
-(http://about.me/webictbyleo)
-(http://corperweb.com)
-(https://www.facebook.com/app_scoped_user_id/10203562122568594/)
+(http://twitter.com/imagickpro)
 
