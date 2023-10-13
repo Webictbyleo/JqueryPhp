@@ -6,7 +6,7 @@ This project aims at providing a seamless, simple way to perform advanced DOM ma
 IDEA
 ---------
  
-This is inspired by the almighty javascript library caled Jquery. 
+This is inspired by the almighty javascript library called Jquery. 
  
  
  JqueryPHP as it is
